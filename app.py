@@ -34,13 +34,15 @@ with app.app_context():
 if db is None:
     raise Exception("Unable to connect to database.")
 
+print("Collections:")
+print(db.list_collection_names())
 
 @app.route("/")
 def index():
 
     testcollection = db.get_collection("testcollection")
-    testitem = testcollection.find_one(profession="walker")
+    testitem = testcollection.find_one({"profession":"walker"})
     print(testitem)
 
     print("Request for index page received")
-    return render_template("index.html")
+    return render_template("index.html", testitem = testitem)
