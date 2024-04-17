@@ -1,20 +1,21 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
-
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
-
 # Build and Test
-TODO: Describe and show how to build your code and run the tests. 
-
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
-
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+## Virtual Environment Setup
+It is recommended to run the following in a virtual environment. To create a virtual environment, you can use the following command:
+```cmd
+py -m venv .venv
+```
+after which, you can navigate into the venv by using:
+```cmd
+.venv\scripts\activate
+```
+### Requirements installation
+If this is an initial setup, use the following command inside the venv to acquire dependencies:
+```cmd
+pip install -r requirements.txt
+```
+## Running
+Once you are navigated into the venv, you can simply activate the server using:
+```
+flask run
+```
+After which you can navigate to your application at `http://localhost:5000`.
