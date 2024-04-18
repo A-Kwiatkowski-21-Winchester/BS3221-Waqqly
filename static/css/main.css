@@ -16,4 +16,8 @@ h1, h2 {
     bottom: 2%;
     left: 2;
     width: 100%;
- }
+}
+
+a:link, a:visited, a:hover, a:active {
+  color: darkred;
+}
