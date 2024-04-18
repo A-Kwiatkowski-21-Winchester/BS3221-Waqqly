@@ -1,5 +1,7 @@
 import os
 import configparser
+from pprint import pprint
+import random
 
 from flask import (
     Flask,
@@ -45,9 +47,17 @@ def favicon():
 
 @app.route("/")
 def index():
+    print("\nNew Request:")
     testcollection = db.get_collection("testcollection")
-    testitem = testcollection.find_one({"profession": "walker"})
-    print(testitem)
+    filter = {"profession":"walker"}
+    itemcount = testcollection.count_documents(filter)
+    testitems = testcollection.find(filter)
+    print(f"Number of items in '{testcollection.name}' using filter {filter}: {itemcount}")
+    randitem = testitems[random.randint(0, itemcount-1)]
+    print()
+    print("Selected random item:")
+    pprint(randitem)
+    print()
 
     print("Request for index page received")
-    return render_template("index.html", testitem=testitem)
+    return render_template("index.html", testitem=randitem)
