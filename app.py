@@ -1,12 +1,15 @@
+import base64
 import os
 import configparser
 from pprint import pprint
 import random
+import secrets
 import textwrap
 from typing import Union
 
 from flask import (
     Flask,
+    Response,
     abort,
     g,  # Global data context for this request
     redirect,
@@ -51,20 +54,26 @@ def favicon():
 
 
 # TODO: Create route for "/API"
-@app.route("/api", methods=['GET', 'POST'])
+# @app.route("/api", methods=['GET', 'POST'])
+@app.route("/api")
 def readAPI():
-    username = request.args.get("username")
-    password = request.args.get("password")
-    if not (username == "mike" and password == "bogus"):
-        abort(403)
-    return_string = "<h1>API PAGE REACHED</h1>\n" f"Welcome {username}!\n"
-    pprint(
-        request.args.to_dict()
-    )  # TODO: Consider passing this directly into the filter for <collection>.find()
+    accept_headers = request.headers.getlist("ACCEPT")
+    auth_header=request.headers.get("Authorization")
+
+    # If no authorization header in request, or is not of type "basic", abort with 400.
+    if ((auth_header is None) or (auth_header.split(" ")[0].casefold() != "basic")):
+        abort(400)
+
+    un_pw_pair = "apidemo:test" #b64: YXBpZGVtbzp0ZXN0
+    correct_b64_auth = base64.b64encode(un_pw_pair.encode("utf-8")) 
+    request_b64_auth = auth_header.split(" ")[1].encode("utf-8")
+    if not (secrets.compare_digest(request_b64_auth, correct_b64_auth)):
+        abort(401)
+
+    return_string = "<h1>API PAGE REACHED</h1> <p>Welcome user!</p> "
+    pprint(request.args.to_dict())
     testcollection = db.get_collection("testcollection")
     filter = request.args.to_dict()
-    filter.pop("username")
-    filter.pop("password")
     itemcount = testcollection.count_documents(filter)
     testitems = testcollection.find(filter)
     return_string += f"Items with filter '{filter}': {itemcount}"
@@ -92,6 +101,10 @@ def index():
     return render_template("index.html", testitem=randitem)
 
 
+@app.errorhandler(400)
+def handle_400(ex):
+    return "400 - Bad Request. Are your headers correct?", 400
+
 @app.errorhandler(404)
-def handle_fourohfour(ex):
-    return "404 - Page Not Found"
+def handle_404(ex):
+    return "404 - Page Not Found", 404
