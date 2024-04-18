@@ -31,7 +31,7 @@ capp = current_app
 
 with app.app_context():
     db = g._database = mongo.db
-    # db = LocalProxy(db)
+    # db = LocalProxy(db) # Seem in other examples of code but unsure to purpose
 
 if db is None:
     raise Exception("Unable to connect to database.")
@@ -61,3 +61,5 @@ def index():
 
     print("Request for index page received")
     return render_template("index.html", testitem=randitem)
+
+# TODO: Create route for "/API"
