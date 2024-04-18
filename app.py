@@ -51,7 +51,7 @@ def favicon():
 
 
 # TODO: Create route for "/API"
-@app.route("/api")
+@app.route("/api", methods=['GET', 'POST'])
 def readAPI():
     username = request.args.get("username")
     password = request.args.get("password")
@@ -61,13 +61,13 @@ def readAPI():
     pprint(
         request.args.to_dict()
     )  # TODO: Consider passing this directly into the filter for <collection>.find()
-    name = request.args.get("name")
-    if name is not None:
-        testcollection = db.get_collection("testcollection")
-        filter = {"name": f"{name}"}
-        itemcount = testcollection.count_documents(filter)
-        testitems = testcollection.find(filter)
-        return_string += f"Items with name '{name}': {itemcount}"
+    testcollection = db.get_collection("testcollection")
+    filter = request.args.to_dict()
+    filter.pop("username")
+    filter.pop("password")
+    itemcount = testcollection.count_documents(filter)
+    testitems = testcollection.find(filter)
+    return_string += f"Items with filter '{filter}': {itemcount}"
 
     return return_string
 
