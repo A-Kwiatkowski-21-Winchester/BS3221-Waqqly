@@ -1,27 +1,23 @@
 import base64
+import json
 import os
 import configparser
 from pprint import pprint
 import random
 import secrets
-import textwrap
-from typing import Union
 
+import bson
+import bson.json_util
 from flask import (
     Flask,
-    Response,
     abort,
-    g,  # Global data context for this request
-    redirect,
-    render_template,
+    g, # Global data context for this request
+    render_template,  
     request,
     send_from_directory,
-    url_for,
     current_app,
 )
 from flask_pymongo import PyMongo
-import pymongo
-from werkzeug.local import LocalProxy
 
 config = configparser.ConfigParser()
 config.read(os.path.abspath(os.path.join(".ini")))
@@ -54,12 +50,13 @@ def favicon():
     )  # TODO: Ensure that favicon is appropriate size
 
 
-# TODO: Create route for "/API"
 # @app.route("/api", methods=['GET', 'POST'])
 @app.route("/api")
 def readAPI():
-    accept_headers = request.headers.getlist("ACCEPT")
+    accept_headers = request.headers.getlist("Accept")
     auth_header = request.headers.get("Authorization")
+
+    pprint(accept_headers)
 
     # If no authorization header in request, or is not of type "basic", abort with 400.
     if (auth_header is None) or (auth_header.split(" ")[0].casefold() != "basic"):
@@ -74,13 +71,16 @@ def readAPI():
         abort(401)
 
     return_string = "<h1>API PAGE REACHED</h1> <p>Welcome user!</p> "
-    pprint(request.args.to_dict())
     testcollection = db.get_collection("testcollection")
     filter = request.args.to_dict()
     itemcount = testcollection.count_documents(filter)
-    testitems = testcollection.find(filter)
+    testitems = testcollection.find(filter) # TODO: Add special query params like LIMIT
+    jsonitems = bson.json_util.dumps(testitems, indent=2)
     return_string += f"Items with filter '{filter}': {itemcount}"
 
+    if('application/json' in (ah.casefold() for ah in accept_headers)):
+        return jsonitems
+    
     return return_string
 
 
@@ -100,20 +100,6 @@ def index():
     print()
     print("Selected random item (m1):")
     pprint(randitem)
-    print()
-
-    # Method 2 for getting random item:
-    other_testitems = testcollection.aggregate(
-        [
-            {"$match": filter},
-            {"$sample": {"size": 1}},
-            # The $sample pipeline keyword gets unique random items
-        ]
-    )
-    samplelist = list(other_testitems)
-    print()
-    print("Selected random item (m2):")
-    pprint(samplelist[0])
     print()
 
     print("Request for index page received")
