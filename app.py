@@ -20,6 +20,7 @@ from flask import (
     current_app,
 )
 from flask_pymongo import PyMongo
+import pymongo
 from werkzeug.local import LocalProxy
 
 config = configparser.ConfigParser()
@@ -58,15 +59,17 @@ def favicon():
 @app.route("/api")
 def readAPI():
     accept_headers = request.headers.getlist("ACCEPT")
-    auth_header=request.headers.get("Authorization")
+    auth_header = request.headers.get("Authorization")
 
     # If no authorization header in request, or is not of type "basic", abort with 400.
-    if ((auth_header is None) or (auth_header.split(" ")[0].casefold() != "basic")):
+    if (auth_header is None) or (auth_header.split(" ")[0].casefold() != "basic"):
         abort(400)
 
-    un_pw_pair = "apidemo:test" #b64: YXBpZGVtbzp0ZXN0
-    correct_b64_auth = base64.b64encode(un_pw_pair.encode("utf-8")) 
+    un_pw_pair = "apidemo:test"  # b64: YXBpZGVtbzp0ZXN0
+    correct_b64_auth = base64.b64encode(un_pw_pair.encode("utf-8"))
     request_b64_auth = auth_header.split(" ")[1].encode("utf-8")
+
+    # Using secrets.compare_digest() helps prevent against timing attacks
     if not (secrets.compare_digest(request_b64_auth, correct_b64_auth)):
         abort(401)
 
@@ -87,14 +90,30 @@ def index():
     testcollection = db.get_collection("testcollection")
     filter = {"profession": "walker"}
     itemcount = testcollection.count_documents(filter)
-    testitems = testcollection.find(filter)
     print(
         f"Number of items in '{testcollection.name}' using filter {filter}: {itemcount}"
     )
+
+    # Method 1 for getting random item:
+    testitems = testcollection.find(filter)
     randitem = testitems[random.randint(0, itemcount - 1)]
     print()
-    print("Selected random item:")
+    print("Selected random item (m1):")
     pprint(randitem)
+    print()
+
+    # Method 2 for getting random item:
+    other_testitems = testcollection.aggregate(
+        [
+            {"$match": filter},
+            {"$sample": {"size": 1}},
+            # The $sample pipeline keyword gets unique random items
+        ]
+    )
+    samplelist = list(other_testitems)
+    print()
+    print("Selected random item (m2):")
+    pprint(samplelist[0])
     print()
 
     print("Request for index page received")
@@ -104,6 +123,7 @@ def index():
 @app.errorhandler(400)
 def handle_400(ex):
     return "400 - Bad Request. Are your headers correct?", 400
+
 
 @app.errorhandler(404)
 def handle_404(ex):
