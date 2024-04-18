@@ -2,9 +2,12 @@ import os
 import configparser
 from pprint import pprint
 import random
+import textwrap
+from typing import Union
 
 from flask import (
     Flask,
+    abort,
     g,  # Global data context for this request
     redirect,
     render_template,
@@ -42,18 +45,44 @@ print(db.list_collection_names())
 
 @app.route("/favicon.ico")
 def favicon():
-    return send_from_directory( os.path.join(app.root_path, "static", "media"), "icon.ico" ) #TODO: Ensure that favicon is appropriate size
+    return send_from_directory(
+        os.path.join(app.root_path, "static", "media"), "icon.ico"
+    )  # TODO: Ensure that favicon is appropriate size
+
+
+# TODO: Create route for "/API"
+@app.route("/api")
+def readAPI():
+    username = request.args.get("username")
+    password = request.args.get("password")
+    if not (username == "mike" and password == "bogus"):
+        abort(403)
+    return_string = "<h1>API PAGE REACHED</h1>\n" f"Welcome {username}!\n"
+    pprint(
+        request.args.to_dict()
+    )  # TODO: Consider passing this directly into the filter for <collection>.find()
+    name = request.args.get("name")
+    if name is not None:
+        testcollection = db.get_collection("testcollection")
+        filter = {"name": f"{name}"}
+        itemcount = testcollection.count_documents(filter)
+        testitems = testcollection.find(filter)
+        return_string += f"Items with name '{name}': {itemcount}"
+
+    return return_string
 
 
 @app.route("/")
 def index():
     print("\nNew Request:")
     testcollection = db.get_collection("testcollection")
-    filter = {"profession":"walker"}
+    filter = {"profession": "walker"}
     itemcount = testcollection.count_documents(filter)
     testitems = testcollection.find(filter)
-    print(f"Number of items in '{testcollection.name}' using filter {filter}: {itemcount}")
-    randitem = testitems[random.randint(0, itemcount-1)]
+    print(
+        f"Number of items in '{testcollection.name}' using filter {filter}: {itemcount}"
+    )
+    randitem = testitems[random.randint(0, itemcount - 1)]
     print()
     print("Selected random item:")
     pprint(randitem)
@@ -62,4 +91,7 @@ def index():
     print("Request for index page received")
     return render_template("index.html", testitem=randitem)
 
-# TODO: Create route for "/API"
+
+@app.errorhandler(404)
+def handle_fourohfour(ex):
+    return "404 - Page Not Found"

@@ -1,0 +1,8 @@
+{
+    "recommendations": [
+        "ms-vscode.live-server",
+        "charliermarsh.ruff",
+        "sidthesloth.html5-boilerplate",
+        "ecmel.vscode-html-css"
+    ]
+}
