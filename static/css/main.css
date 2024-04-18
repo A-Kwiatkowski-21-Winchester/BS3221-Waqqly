@@ -1,8 +1,9 @@
 body {
     font-family: Outfit, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    width: 100vw;
-    height: 100vh;
+    padding: 8px 16px 16px 16px;
     background-image: linear-gradient(to bottom right, #ffead2, #fed6d7);
+    height: 100vh;
+    overflow: hidden /* Temporarily hiding scroll bar */
 }
 
 h1 {
@@ -12,7 +13,7 @@ h1 {
 
 .banner {
     position: fixed;
-    bottom: 1%;
+    bottom: 2%;
     left: 2;
     width: 100%;
  }
