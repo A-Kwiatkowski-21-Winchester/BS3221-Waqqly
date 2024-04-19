@@ -1,5 +1,6 @@
 import base64
 import json
+from math import e
 import os
 import configparser
 from pprint import pprint
@@ -18,6 +19,8 @@ from flask import (
     current_app,
 )
 from flask_pymongo import PyMongo
+from jinja2 import TemplateNotFound
+import jinja2
 from markupsafe import Markup
 
 config = configparser.ConfigParser()
@@ -116,7 +119,10 @@ def index():
 
 @app.route("/<variable>")
 def allpages(variable):
-    return render_template(f"{variable}.html")
+    try:
+        return render_template(f"{variable}.html")
+    except TemplateNotFound:
+        abort(404)
 
 
 @app.errorhandler(400)
