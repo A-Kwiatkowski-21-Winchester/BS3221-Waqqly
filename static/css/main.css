@@ -21,3 +21,16 @@ h1, h2 {
 a:link, a:visited, a:hover, a:active {
   color: darkred;
 }
+
+a.button {
+    padding: 1px 6px;
+    border: 1px outset buttonborder;
+    border-radius: 3px;
+    color: white;
+    background-color: darkred;
+    text-decoration: none;
+}
+
+footer {
+    font-size: 16px;
+}

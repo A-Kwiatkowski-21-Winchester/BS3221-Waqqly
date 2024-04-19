@@ -75,6 +75,7 @@ def readAPI():
 
     # Using secrets.compare_digest() helps prevent against timing attacks
     if not (secrets.compare_digest(request_b64_auth, correct_b64_auth)):
+        g.abort_reason = "Invalid authorization"
         abort(401)
 
     return_string = "<h1>API PAGE REACHED</h1> <p>Welcome user!</p> "
@@ -113,10 +114,15 @@ def index():
     return render_template("index.html", testitem=randitem)
 
 
+@app.route("/<variable>")
+def allpages(variable):
+    return render_template(f"{variable}.html")
+
+
 @app.errorhandler(400)
 def handle_400(ex):
     error_string = "400 - Bad Request"
-    if 'abort_reason' in g:
+    if "abort_reason" in g:
         error_string += f" :: {g.abort_reason}"
     return error_string, 400
 
@@ -124,7 +130,7 @@ def handle_400(ex):
 @app.errorhandler(401)
 def handle_401(ex):
     error_string = "401 - Unauthorized"
-    if 'abort_reason' in g:
+    if "abort_reason" in g:
         error_string += f" :: {g.abort_reason}"
     else:
         error_string += " :: The server could not verify that you are authorized to access the URL requested."
@@ -135,6 +141,6 @@ def handle_401(ex):
 @app.errorhandler(404)
 def handle_404(ex):
     error_string = "404 - Page Not Found"
-    if 'abort_reason' in g:
+    if "abort_reason" in g:
         error_string += f" :: {g.abort_reason}"
     return error_string, 404
