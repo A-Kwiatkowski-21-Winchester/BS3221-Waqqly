@@ -7,33 +7,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/static/css/main.css" />
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script></head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+</head>
 
 <body class="bg">
     <h1>Greetings, traveler!</h1>
     <p>Hello there!</p>
     <br>
-    <h2>Random item:</h2>
-    <div id="randomitems">
-        <p>Name: <b>{{testitem.first_name}}</b></p>
-        <p>Profession: <b>{{testitem.type}}</b></p>
+    <h2>Random user:</h2>
+    <div id="randomuser">
+        <p>Name: <b><span id="randomname">{{testitem.first_name}} {{testitem.last_name}}</b><span></p>
+        <p>Type: <b><span id="randomtype">{{testitem.type}}</b></span></p>
     </div>
-    <button onclick="myFunction()">Refresh</button>
+    <button class="button secondary" type="button" onclick="refreshRandomUser()">Refresh</button>
     <script>
-        function myFunction() {
+        function getRandomInt(max) {
+            return Math.floor(Math.random() * max);
+        }
+        function refreshRandomUser() {
+            document.getElementById("randomname").innerHTML = "Loading..."
+            document.getElementById("randomtype").innerHTML = "Loading..."
             $.ajax({
                 type: "GET",
-                headers: {Authorization: "basic YXBpZGVtbzp0ZXN0", Accept: "application/json"},
+                headers: { Authorization: "basic YXBpZGVtbzp0ZXN0", Accept: "application/json" },
                 url: "/api?type=walker",
                 success: function (result) {
-                    console.log(result);
+                    index = getRandomInt(result.length)
+                    randomSelection = result[index]
+                    console.log("Captured: ", randomSelection)
+                    document.getElementById("randomname").innerHTML = `${randomSelection.first_name} ${randomSelection.last_name}`
+                    document.getElementById("randomtype").innerHTML = randomSelection.type
                 },
                 error: function (result) {
-                    console.log(result);
+                    console.log("Error getting data: ", result);
+                    document.getElementById("randomname").innerHTML = "ERROR"
+                    document.getElementById("randomtype").innerHTML = "ERROR"
                 }
             });
         }
     </script>
+    <br>
     <br>
     <br>
     <a class="button primary" href="/register"> New Registration </a>

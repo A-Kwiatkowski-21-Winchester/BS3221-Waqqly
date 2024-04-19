@@ -54,7 +54,7 @@ def favicon():
 
 
 # @app.route("/api", methods=['GET', 'POST'])
-@app.route("/api")
+@app.route("/api") # TODO: SEPARATE INTO *GET* AND *POST*
 def readAPI():
     accept_headers = request.headers.getlist("Accept")
     auth_header = request.headers.get("Authorization")
@@ -85,7 +85,8 @@ def readAPI():
     filter = request.args.to_dict()
     itemcount = testcollection.count_documents(filter)
     testitems = testcollection.find(filter)  # TODO: Add special query params like LIMIT
-    jsonitems = bson.json_util.dumps(testitems, indent=2)
+    bsonitems = bson.json_util.dumps(testitems, indent=2)
+    jsonitems = json.dumps(json.loads(bsonitems), skipkeys=True)
     return_string += f"Items with filter '{filter}': {itemcount}"
 
     if ("acceptJSON" in g) and (g.acceptJSON is True):
@@ -131,6 +132,8 @@ def index():
     print("Selected random item (m1):")
     pprint(randitem)
     print()
+
+    testcollection.insert_one({"id": "0004", "name":"hester"})
 
     print("Request for index page received")
     return render_template("index.html", testitem=randitem)

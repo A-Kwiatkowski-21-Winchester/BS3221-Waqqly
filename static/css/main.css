@@ -52,6 +52,7 @@ a:active {
   color: darkred;
 }
 
+button.button,
 a.button,
 input.button {
   text-decoration: none;
@@ -60,18 +61,27 @@ input.button {
   padding: 2px 6px;
   border: 1px solid #333;
   border-radius: 3px;
+  cursor: pointer
 }
 
+button.button.primary,
 a.button.primary,
 input.button.primary {
   color: white;
   background-color: darkred;
 }
 
+button.button.secondary,
 a.button.secondary,
 input.button.secondary {
   color: #333;
   background-color: #eee;
+}
+
+input {
+  border-radius: 5px;
+  border: 1px solid darkred;
+  accent-color: darkred
 }
 
 footer {
