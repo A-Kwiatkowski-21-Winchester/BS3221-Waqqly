@@ -11,13 +11,14 @@ import bson.json_util
 from flask import (
     Flask,
     abort,
-    g, # Global data context for this request
-    render_template,  
+    g,  # Global data context for this request
+    render_template,
     request,
     send_from_directory,
     current_app,
 )
 from flask_pymongo import PyMongo
+from markupsafe import Markup
 
 config = configparser.ConfigParser()
 config.read(os.path.abspath(os.path.join(".ini")))
@@ -58,8 +59,14 @@ def readAPI():
 
     pprint(accept_headers)
 
+    if "application/json" in (ah.casefold() for ah in accept_headers):
+        g.acceptJSON = True
+
     # If no authorization header in request, or is not of type "basic", abort with 400.
     if (auth_header is None) or (auth_header.split(" ")[0].casefold() != "basic"):
+        g.abort_reason = (
+            "Authorization header not present or not of correct type 'Basic'"
+        )
         abort(400)
 
     un_pw_pair = "apidemo:test"  # b64: YXBpZGVtbzp0ZXN0
@@ -74,13 +81,13 @@ def readAPI():
     testcollection = db.get_collection("testcollection")
     filter = request.args.to_dict()
     itemcount = testcollection.count_documents(filter)
-    testitems = testcollection.find(filter) # TODO: Add special query params like LIMIT
+    testitems = testcollection.find(filter)  # TODO: Add special query params like LIMIT
     jsonitems = bson.json_util.dumps(testitems, indent=2)
     return_string += f"Items with filter '{filter}': {itemcount}"
 
-    if('application/json' in (ah.casefold() for ah in accept_headers)):
+    if g.acceptJSON:
         return jsonitems
-    
+
     return return_string
 
 
@@ -108,9 +115,26 @@ def index():
 
 @app.errorhandler(400)
 def handle_400(ex):
-    return "400 - Bad Request. Are your headers correct?", 400
+    error_string = "400 - Bad Request"
+    if 'abort_reason' in g:
+        error_string += f" :: {g.abort_reason}"
+    return error_string, 400
+
+
+@app.errorhandler(401)
+def handle_401(ex):
+    error_string = "401 - Unauthorized"
+    if 'abort_reason' in g:
+        error_string += f" :: {g.abort_reason}"
+    else:
+        error_string += " :: The server could not verify that you are authorized to access the URL requested."
+
+    return error_string, 401
 
 
 @app.errorhandler(404)
 def handle_404(ex):
-    return "404 - Page Not Found", 404
+    error_string = "404 - Page Not Found"
+    if 'abort_reason' in g:
+        error_string += f" :: {g.abort_reason}"
+    return error_string, 404
