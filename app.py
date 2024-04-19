@@ -133,8 +133,6 @@ def index():
     pprint(randitem)
     print()
 
-    testcollection.insert_one({"id": "0004", "name":"hester"})
-
     print("Request for index page received")
     return render_template("index.html", testitem=randitem)
 
