@@ -1,36 +1,69 @@
 body {
-    font-family: Outfit, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    padding: 8px 16px 16px 16px;
-    background-image: linear-gradient(to bottom right, #ffead2, #fed6d7);
-    height: 100vh;
-    overflow: hidden /* Temporarily hiding scroll bar */
+  font-family: Outfit, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  padding: 8px 16px 16px 16px;
+  background-image: linear-gradient(to bottom right, #ffead2, #fed6d7);
+  background-attachment: fixed;
 }
 
-h1, h2 {
-    font-family: Outfit, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-weight: 250;
+h1,
+h2 {
+  font-family: Outfit, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 250;
+}
+
+code {
+  font-family: "Cascadia Mono", "Lucida Console", "Courier New", Courier, monospace;
+  background: #ffaaaa;
+  border-radius: 5px;
+  padding-inline: 5px;
+}
+
+pre {
+  background: #333;
+  color: lightgray;
+  border-radius: 5px;
+  padding-left: 10px;
+  padding-top: 0;
+  display: flex;
+}
+pre code {
+  background: #333;
 }
 
 .banner {
-    position: fixed;
-    bottom: 2%;
-    left: 2;
-    width: 100%;
+  background-color: #333;
+  color: lightgray;
+  border-radius: 5px;
+  position: fixed;
+  bottom: 2%;
+  padding: 5px;
+}
+.banner a:link,
+.banner a:visited,
+.banner a:hover,
+.banner a:active {
+  color: #fed6d7;
 }
 
-a:link, a:visited, a:hover, a:active {
+a:link,
+a:visited,
+a:hover,
+a:active {
   color: darkred;
 }
 
-a.button {
-    padding: 1px 6px;
-    border: 1px outset buttonborder;
-    border-radius: 3px;
-    color: white;
-    background-color: darkred;
-    text-decoration: none;
+a.button,
+input.button {
+  padding: 1px 6px;
+  border: 1px outset buttonborder;
+  border-radius: 3px;
+  color: white;
+  background-color: darkred;
+  text-decoration: none;
+  font-size: 16px;
+  font-family: Outfit, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 footer {
-    font-size: 16px;
+  font-size: 16px;
 }
