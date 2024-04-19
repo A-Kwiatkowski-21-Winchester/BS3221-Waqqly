@@ -1,6 +1,5 @@
 import base64
 import json
-from math import e
 import os
 import configparser
 from pprint import pprint
@@ -12,7 +11,9 @@ import bson.json_util
 from flask import (
     Flask,
     abort,
-    g,  # Global data context for this request
+    g,
+    jsonify,
+    redirect,  # Global data context for this request
     render_template,
     request,
     send_from_directory,
@@ -20,8 +21,6 @@ from flask import (
 )
 from flask_pymongo import PyMongo
 from jinja2 import TemplateNotFound
-import jinja2
-from markupsafe import Markup
 
 config = configparser.ConfigParser()
 config.read(os.path.abspath(os.path.join(".ini")))
@@ -89,17 +88,37 @@ def readAPI():
     jsonitems = bson.json_util.dumps(testitems, indent=2)
     return_string += f"Items with filter '{filter}': {itemcount}"
 
-    if g.acceptJSON:
-        return jsonitems
+    if ("acceptJSON" in g) and (g.acceptJSON is True):
+        return jsonify(json.loads(jsonitems))
 
     return return_string
+
+
+
+@app.route("/register")
+def register():
+    reg_details = request.args.to_dict()
+    if not reg_details:
+        return render_template("/register/register.html")
+    
+    print("\nNew Registration:")
+    pprint(reg_details)
+
+    return redirect(f"/register/complete?first_name={reg_details['first_name']}")
+
+
+@app.route("/register/complete")
+def register_complete():
+    pprint(request.args.to_dict())
+    fname = request.args.get("first_name") or "kind stranger"
+    return render_template("register/complete.html", name=fname)
 
 
 @app.route("/")
 def index():
     print("\nNew Request:")
     testcollection = db.get_collection("testcollection")
-    filter = {"profession": "walker"}
+    filter = {"type": {"$regex": "walk.*"}}
     itemcount = testcollection.count_documents(filter)
     print(
         f"Number of items in '{testcollection.name}' using filter {filter}: {itemcount}"

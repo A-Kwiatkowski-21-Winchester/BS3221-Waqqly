@@ -14,31 +14,32 @@
 
     <form>
         <label>I am a...</label><br>
-        <input type="radio" id="owner" name="type" value="Owner">
+        <input type="radio" required id="owner" name="type" value="Owner">
         <label for="owner">Dog Owner</label> &emsp;
-        <input type="radio" id="walker" name="type" value="Walker">
+        <input type="radio" required id="walker" name="type" value="Walker">
         <label for="walker">Dog Walker</label>
         <br><br>
         <label for="fname">First Name:</label><br>
-        <input type="text" id="fname" name="fname" value=""><br>
+        <input type="text" required id="fname" name="first_name" value=""><br>
         <label for="lname">Last Name:</label><br>
-        <input type="text" id="lname" name="lname" value=""><br>
+        <input type="text" required id="lname" name="last_name" value=""><br>
         <br>
         <label for="email">Email address:</label><br>
-        <input type="email" id="email" name="email" value=""><br>
+        <input type="email" required id="email" name="email" value=""><br>
         <label for="phone">Phone number:</label><br>
-        <input type="tel" id="phone" name="phone" value=""><br>
+        <input type="tel" required pattern="\+?\s?(?:\(\d{3}\))?\d+" id="phone" name="phone" value=""><br>
         <br>
         <label for="addr_line1">Address line 1:</label><br>
-        <input type="text" id="addr_line1" name="addr_line1" value=""><br>
+        <input type="text" required id="addr_line1" name="addr_line1" value=""><br>
         <label for="addr_city">City:</label><br>
-        <input type="text" id="addr_city" name="addr_city" value=""><br>
+        <input type="text" required id="addr_city" name="addr_city" value=""><br>
         <label for="addr_country">Country:</label><br>
-        <input type="text" id="addr_country" name="addr_country" value=""><br>
+        <input type="text" required id="addr_country" name="addr_country" value=""><br>
         <label for="addr_postal">Postal Code:</label><br>
-        <input type="text" id="addr_postal" name="addr_postal" value=""><br>
+        <input type="text" required id="addr_postal" name="addr_postal" value=""><br>
         <br>
-        <input class="button" type="submit" value="Register"></input>
+        <input class="button primary" type="submit" value="Register"></input>
+        <a href="/" class="button secondary">Cancel</a>
     </form>
 
     <br><br><br>

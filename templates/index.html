@@ -7,25 +7,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/static/css/main.css" />
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
-</head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script></head>
 
 <body class="bg">
     <h1>Greetings, traveler!</h1>
     <p>Hello there!</p>
     <br>
     <h2>Random item:</h2>
-    <p>Name: <b>{{testitem.name}}</b></p>
-    <p>Profession: <b>{{testitem.profession}}</b></p>
-    <pre>
-        <code>
-this.marker()
-effortless.OS().break(3)
-        </code>
-    </pre>
+    <div id="randomitems">
+        <p>Name: <b>{{testitem.first_name}}</b></p>
+        <p>Profession: <b>{{testitem.type}}</b></p>
+    </div>
+    <button onclick="myFunction()">Refresh</button>
+    <script>
+        function myFunction() {
+            $.ajax({
+                type: "GET",
+                headers: {Authorization: "basic YXBpZGVtbzp0ZXN0", Accept: "application/json"},
+                url: "/api?type=walker",
+                success: function (result) {
+                    console.log(result);
+                },
+                error: function (result) {
+                    console.log(result);
+                }
+            });
+        }
+    </script>
     <br>
-
-    So now you do <code>this.break()</code><br><br>
-    <a class="button" href="/register"> New Registration </a>
+    <br>
+    <a class="button primary" href="/register"> New Registration </a>
 
     <div class="banner">
         <footer>
