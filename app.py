@@ -181,7 +181,7 @@ def register():
     printlog(reg_details, pretty=True)
 
     querystring = urllib.parse.urlencode(reg_details)
-    postURL = f"https://{request.host}api/post?{querystring}" 
+    postURL = f"https://{request.host}/api/post?{querystring}" 
     printlog(f"Attempting to connect to {postURL}")
     response = requests.post(
         postURL,
