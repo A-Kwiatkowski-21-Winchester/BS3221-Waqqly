@@ -67,6 +67,9 @@ printlog(db.list_collection_names())
 un_pw_pair = "apidemo:test"  # b64: YXBpZGVtbzp0ZXN0
 correct_b64_auth = base64.b64encode(un_pw_pair.encode("utf-8"))
 
+# printlog("Checking connection to outside world...")
+# request.
+
 
 def checkAuthorization(abortOnFail: bool = True):
     printlog(list(request.headers), pretty=True)
@@ -188,7 +191,7 @@ def register():
     printlog(reg_details, pretty=True)
 
     querystring = urllib.parse.urlencode(reg_details)
-    postURL = f"http://{request.host}/api/post?{querystring}" 
+    postURL = f"{request.host_url}api/post?{querystring}" 
     printlog(f"Attempting to connect to {postURL}")
     response = requests.post(
         postURL,
@@ -196,7 +199,7 @@ def register():
             "Accept": "application/json",
             "Authorization": "Basic " + correct_b64_auth.decode("utf-8"),
         },
-        timeout=15,
+        timeout=5,
     )
     printlog("Connection ended")
     printlog(f"Responded with {response.status_code}: {response._content}")
