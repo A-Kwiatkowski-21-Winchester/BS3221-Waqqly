@@ -172,7 +172,7 @@ def register():
 
     querystring = urllib.parse.urlencode(reg_details)
     response = requests.post(
-        "http://localhost:5000/api/post?" + querystring,
+        f"{request.host_url}api/post?" + querystring,
         headers={
             "Accept": "application/json",
             "Authorization": "Basic " + correct_b64_auth.decode("utf-8"),
