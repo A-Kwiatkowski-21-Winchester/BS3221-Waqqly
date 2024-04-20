@@ -193,14 +193,19 @@ def register():
     querystring = urllib.parse.urlencode(reg_details)
     postURL = f"{request.host_url}api/post?{querystring}" 
     printlog(f"Attempting to connect to {postURL}")
-    response = requests.post(
-        postURL,
-        headers={
-            "Accept": "application/json",
-            "Authorization": "Basic " + correct_b64_auth.decode("utf-8"),
-        },
-        timeout=5,
-    )
+    try:
+        response = requests.post(
+            postURL,
+            headers={
+                "Accept": "application/json",
+                "Authorization": "Basic " + correct_b64_auth.decode("utf-8"),
+            },
+            timeout=5,
+        )
+    except Exception as ex:
+        printlog(ex)
+        abort(500)
+
     printlog("Connection ended")
     printlog(f"Responded with {response.status_code}: {response._content}")
     if response.status_code != 201:
