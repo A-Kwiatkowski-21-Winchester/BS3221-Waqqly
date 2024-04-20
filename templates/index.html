@@ -30,7 +30,7 @@
             $.ajax({
                 type: "GET",
                 headers: { Authorization: "basic YXBpZGVtbzp0ZXN0", Accept: "application/json" },
-                url: "/api?type=walker",
+                url: "/api/get",
                 success: function (result) {
                     index = getRandomInt(result.length)
                     randomSelection = result[index]
