@@ -198,6 +198,7 @@ def register():
         },
         timeout=15,
     )
+    printlog("Connection ended")
     printlog(f"Responded with {response.status_code}: {response._content}")
     if response.status_code != 201:
         g.abort_reason = f"Something went wrong during registration. Server said: '{response._content}'"
