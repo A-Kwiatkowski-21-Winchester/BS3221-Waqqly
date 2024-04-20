@@ -25,21 +25,26 @@ from flask import (
 )
 from flask_pymongo import PyMongo
 from jinja2 import TemplateNotFound
+import werkzeug
+import werkzeug.exceptions
 
-with open('app.log', 'w') as f:
-    f.write("") # Clear file
+with open("app.log", "w") as f:
+    f.write("")  # Clear file
+
 
 def printlog(obj=None, pretty=False):
-    if(obj is None):
+    if obj is None:
         obj = ""
-    with open('app.log', 'a') as f:
-        if(pretty):
+    with open("app.log", "a") as f:
+        if pretty:
             pprint(obj)
             print(datetime.now().strftime("%Y-%m-%d %H:%M:%S: "), file=f)
             pprint(obj, stream=f)
-        print(obj)
-        print(datetime.now().strftime("%Y-%m-%d %H:%M:%S: "), file=f, end="")
-        print(obj, file=f)
+        else:
+            print(obj)
+            print(datetime.now().strftime("%Y-%m-%d %H:%M:%S: "), file=f, end="")
+            print(obj, file=f)
+
 
 config = configparser.ConfigParser()
 config.read(os.path.abspath(os.path.join(".ini")))
@@ -67,8 +72,7 @@ printlog(db.list_collection_names())
 un_pw_pair = "apidemo:test"  # b64: YXBpZGVtbzp0ZXN0
 correct_b64_auth = base64.b64encode(un_pw_pair.encode("utf-8"))
 
-# printlog("Checking connection to outside world...")
-# request.
+db.testcollection.delete_many({"first_name": {"$regex": "TEST.*"}})
 
 
 def checkAuthorization(abortOnFail: bool = True):
@@ -112,7 +116,6 @@ def favicon():
 def getAPI():
     checkAuthorization()
     accept_headers = request.headers.getlist("Accept")
-    printlog(request.method)
 
     if "application/json" in (ah.casefold() for ah in accept_headers):
         g.acceptJSON = True
@@ -132,19 +135,15 @@ def getAPI():
     return return_string
 
 
-@app.route("/api/post", methods=["POST"])
-def postAPI():
-    checkAuthorization()
-    printlog("POST REQUEST RECEIVED")
-
-    post_details = request.args.to_dict()
-    printlog(post_details)
+def create_user():
+    reg_details = request.args.to_dict()
+    printlog(reg_details, pretty=True)
     user_dict = {"id": ""}
 
     def transplant(keyString, type):
-        if not isinstance(post_details[keyString], type):
+        if not isinstance(reg_details[keyString], type):
             raise TypeError(keyString)
-        user_dict[keyString] = post_details.pop(keyString)
+        user_dict[keyString] = reg_details.pop(keyString)
 
     try:
         transplant("type", str)
@@ -163,19 +162,25 @@ def postAPI():
         g.abort_reason = f"Required field '{ex.args[0]}' has not been provided"
         abort(400)
 
-    user_dict["notes"] = post_details.pop("notes", "")  # Optional, with blank default
+    user_dict["notes"] = reg_details.pop("notes", "")  # Optional, with blank default
 
-    if len(post_details) > 0:
-        remaining_keys = list(post_details.keys())
+    if len(reg_details) > 0:
+        remaining_keys = list(reg_details.keys())
         g.abort_reason = f"Provided field '{remaining_keys[0]}' is not supported"
         abort(400)
 
     user_dict["id"] = getMaxID() + 1
-    printlog(user_dict, pretty=True)
-    # printlog(urllib.parse.urlencode(user_dict)) # Convert into query
 
     printlog("Adding to database")
     db.testcollection.insert_one(user_dict)
+
+
+@app.route("/api/post", methods=["POST"])
+def postAPI():
+    printlog("POST REQUEST RECEIVED")
+    checkAuthorization()
+
+    create_user()
 
     printlog("Returning 201 - Successful")
     return "Successful", 201
@@ -187,37 +192,21 @@ def register():
     if not reg_details:
         return render_template("/register/register.html")
 
-    printlog("\nNew Registration:")
-    printlog(reg_details, pretty=True)
+    printlog("New Registration:")
 
-    querystring = urllib.parse.urlencode(reg_details)
-    postURL = f"{request.host_url}api/post?{querystring}" 
-    printlog(f"Attempting to connect to {postURL}")
     try:
-        response = requests.post(
-            postURL,
-            headers={
-                "Accept": "application/json",
-                "Authorization": "Basic " + correct_b64_auth.decode("utf-8"),
-            },
-            timeout=5,
-        )
-    except Exception as ex:
-        printlog(ex)
-        abort(500)
-
-    printlog("Connection ended")
-    printlog(f"Responded with {response.status_code}: {response._content}")
-    if response.status_code != 201:
-        g.abort_reason = f"Something went wrong during registration. Server said: '{response._content}'"
+        create_user()
+    except werkzeug.exceptions.HTTPException as ex:
+        exception_msg = g.get("abort_reason", default="Unknown Error")
+        g.abort_reason = f"Something went wrong during registration. Server said: '{ex.code} - {exception_msg}'"
         abort(400)
 
+    printlog("No error, registration assumed to be successful.")
     return redirect(f"/register/complete?first_name={reg_details.get('first_name')}")
 
 
 @app.route("/register/complete")
 def register_complete():
-    printlog(request.args.to_dict(), pretty=True)
     fname = request.args.get("first_name") or "kind stranger"
     return render_template("register/complete.html", name=fname)
 
