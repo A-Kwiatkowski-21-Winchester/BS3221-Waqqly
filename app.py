@@ -1,4 +1,5 @@
 import base64
+from datetime import datetime
 import json
 import os
 import configparser
@@ -34,8 +35,10 @@ def printlog(obj=None, pretty=False):
     with open('app.log', 'a') as f:
         if(pretty):
             pprint(obj)
+            pprint(datetime.now().strftime("%Y-%m-%d %H:%M:%S: "), stream=f)
             pprint(obj, stream=f)
         print(obj)
+        print(datetime.now().strftime("%Y-%m-%d %H:%M:%S: "), file=f, end="")
         print(obj, file=f)
 
 config = configparser.ConfigParser()
@@ -129,8 +132,10 @@ def getAPI():
 @app.route("/api/post", methods=["POST"])
 def postAPI():
     checkAuthorization()
+    printlog("POST REQUEST RECEIVED")
 
     post_details = request.args.to_dict()
+    printlog(post_details)
     user_dict = {"id": ""}
 
     def transplant(keyString, type):
@@ -189,7 +194,7 @@ def register():
             "Accept": "application/json",
             "Authorization": "Basic " + correct_b64_auth.decode("utf-8"),
         },
-        timeout=15
+        timeout=15,
     )
     printlog(f"Responded with {response.status_code}: {response._content}")
     if response.status_code != 201:
