@@ -35,7 +35,7 @@ def printlog(obj=None, pretty=False):
     with open('app.log', 'a') as f:
         if(pretty):
             pprint(obj)
-            pprint(datetime.now().strftime("%Y-%m-%d %H:%M:%S: "), stream=f)
+            print(datetime.now().strftime("%Y-%m-%d %H:%M:%S: "), file=f)
             pprint(obj, stream=f)
         print(obj)
         print(datetime.now().strftime("%Y-%m-%d %H:%M:%S: "), file=f, end="")
