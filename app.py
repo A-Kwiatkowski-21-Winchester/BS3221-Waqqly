@@ -171,8 +171,10 @@ def postAPI():
     printlog(user_dict, pretty=True)
     # printlog(urllib.parse.urlencode(user_dict)) # Convert into query
 
+    printlog("Adding to database")
     db.testcollection.insert_one(user_dict)
 
+    printlog("Returning 201 - Successful")
     return "Successful", 201
 
 
