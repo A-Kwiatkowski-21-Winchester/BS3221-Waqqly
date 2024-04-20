@@ -186,7 +186,7 @@ def register():
     printlog(reg_details, pretty=True)
 
     querystring = urllib.parse.urlencode(reg_details)
-    postURL = f"https://{request.host}/api/post?{querystring}" 
+    postURL = f"http://{request.host}/api/post?{querystring}" 
     printlog(f"Attempting to connect to {postURL}")
     response = requests.post(
         postURL,
@@ -228,8 +228,6 @@ def index():
     printlog("Selected random item (m1):")
     printlog(randitem, pretty=True)
     printlog()
-
-    printlog(getMaxID())
 
     printlog("Request for index page received")
     return render_template("index.html", testitem=randitem)
