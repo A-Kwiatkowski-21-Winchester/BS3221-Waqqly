@@ -1,6 +1,5 @@
 import base64
 import json
-from math import e
 import os
 import configparser
 from pprint import pprint
@@ -23,10 +22,21 @@ from flask import (
     send_from_directory,
     current_app,
 )
-import flask
 from flask_pymongo import PyMongo
-from itsdangerous import NoneAlgorithm
 from jinja2 import TemplateNotFound
+
+with open('app.log', 'w') as f:
+    f.write("") # Clear file
+
+def printlog(obj=None, pretty=False):
+    if(obj is None):
+        obj = ""
+    with open('app.log', 'a') as f:
+        if(pretty):
+            pprint(obj)
+            pprint(obj, stream=f)
+        print(obj)
+        print(obj, file=f)
 
 config = configparser.ConfigParser()
 config.read(os.path.abspath(os.path.join(".ini")))
@@ -48,15 +58,15 @@ with app.app_context():
 if db is None:
     raise Exception("Unable to connect to database.")
 
-print("Collections:")
-print(db.list_collection_names())
+printlog("Collections:")
+printlog(db.list_collection_names())
 
 un_pw_pair = "apidemo:test"  # b64: YXBpZGVtbzp0ZXN0
 correct_b64_auth = base64.b64encode(un_pw_pair.encode("utf-8"))
 
 
 def checkAuthorization(abortOnFail: bool = True):
-    pprint(list(request.headers))
+    printlog(list(request.headers), pretty=True)
     auth_header = request.headers.get("Authorization")
     # If no authorization header in request, or is not of type "basic", abort with 400.
     if (auth_header is None) or (auth_header.split(" ")[0].casefold() != "basic"):
@@ -96,7 +106,7 @@ def favicon():
 def getAPI():
     checkAuthorization()
     accept_headers = request.headers.getlist("Accept")
-    print(request.method)
+    printlog(request.method)
 
     if "application/json" in (ah.casefold() for ah in accept_headers):
         g.acceptJSON = True
@@ -153,8 +163,8 @@ def postAPI():
         abort(400)
 
     user_dict["id"] = getMaxID() + 1
-    pprint(user_dict)
-    # print(urllib.parse.urlencode(user_dict)) # Convert into query
+    printlog(user_dict, pretty=True)
+    # printlog(urllib.parse.urlencode(user_dict)) # Convert into query
 
     db.testcollection.insert_one(user_dict)
 
@@ -167,18 +177,21 @@ def register():
     if not reg_details:
         return render_template("/register/register.html")
 
-    print("\nNew Registration:")
-    pprint(reg_details)
+    printlog("\nNew Registration:")
+    printlog(reg_details, pretty=True)
 
     querystring = urllib.parse.urlencode(reg_details)
+    postURL = f"{request.host_url}api/post?{querystring}" 
+    printlog(f"Attempting to connect to {postURL}")
     response = requests.post(
-        f"{request.host_url}api/post?" + querystring,
+        postURL,
         headers={
             "Accept": "application/json",
             "Authorization": "Basic " + correct_b64_auth.decode("utf-8"),
         },
         timeout=15
     )
+    printlog(f"Responded with {response.status_code}: {response._content}")
     if response.status_code != 201:
         g.abort_reason = f"Something went wrong during registration. Server said: '{response._content}'"
         abort(400)
@@ -188,32 +201,32 @@ def register():
 
 @app.route("/register/complete")
 def register_complete():
-    pprint(request.args.to_dict())
+    printlog(request.args.to_dict(), pretty=True)
     fname = request.args.get("first_name") or "kind stranger"
     return render_template("register/complete.html", name=fname)
 
 
 @app.route("/")
 def index():
-    print("\nNew Request:")
+    printlog("\nNew Request:")
     testcollection = db.get_collection("testcollection")
     filter = {"type": {"$regex": "walk.*"}}
     itemcount = testcollection.count_documents(filter)
-    print(
+    printlog(
         f"Number of items in '{testcollection.name}' using filter {filter}: {itemcount}"
     )
 
     # Method 1 for getting random item:
     testitems = testcollection.find(filter)
     randitem = testitems[random.randint(0, itemcount - 1)]
-    print()
-    print("Selected random item (m1):")
-    pprint(randitem)
-    print()
+    printlog()
+    printlog("Selected random item (m1):")
+    printlog(randitem, pretty=True)
+    printlog()
 
-    print(getMaxID())
+    printlog(getMaxID())
 
-    print("Request for index page received")
+    printlog("Request for index page received")
     return render_template("index.html", testitem=randitem)
 
 
@@ -230,6 +243,7 @@ def handle_400(ex):
     error_string = "400 - Bad Request"
     if "abort_reason" in g:
         error_string += f" :: {g.abort_reason}"
+    printlog(error_string)
     return error_string, 400
 
 
@@ -241,6 +255,7 @@ def handle_401(ex):
     else:
         error_string += " :: The server could not verify that you are authorized to access the URL requested."
 
+    printlog(error_string)
     return error_string, 401
 
 
@@ -249,4 +264,6 @@ def handle_404(ex):
     error_string = "404 - Page Not Found"
     if "abort_reason" in g:
         error_string += f" :: {g.abort_reason}"
+
+    printlog(error_string)
     return error_string, 404
