@@ -177,6 +177,7 @@ def register():
             "Accept": "application/json",
             "Authorization": "Basic " + correct_b64_auth.decode("utf-8"),
         },
+        timeout=15
     )
     if response.status_code != 201:
         g.abort_reason = f"Something went wrong during registration. Server said: '{response._content}'"
