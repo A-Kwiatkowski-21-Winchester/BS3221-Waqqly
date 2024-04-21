@@ -1,3 +1,8 @@
+# Deployment
+This repository is connected to the corresponding Azure `ak-waqqly` web app, and will deploy automatically upon any change being pushed to the `main` branch.
+Other branches such as `dev` can be used for development without the public-facing deployment being affected.
+
+
 # Build and Test
 ## Virtual Environment Setup
 It is recommended to run the following in a virtual environment. To create a virtual environment, you can use the following command:
