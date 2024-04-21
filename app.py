@@ -6,7 +6,6 @@ import configparser
 from pprint import pprint
 import random
 import secrets
-from pymongo.collation import Collation, CollationStrength
 import bson
 import bson.json_util
 from flask import (

@@ -137,7 +137,7 @@
 
                         document.getElementById('div_result_details').hidden = false;
 
-                        $.when(mapRequest()).done(function() {
+                        $.when(mapRequest()).done(function () {
                             // Map must be created after reveal so bounding box loads in correctly
                             if (Object.keys(addr_coords).length == 0) {
                                 mapFail("(Address coordinate data empty)")
