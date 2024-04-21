@@ -63,6 +63,7 @@
                     }
                 } catch (error) {
                     console.error(error);
+                    document.getElementById('div_result_details').hidden = true;
                     document.getElementById("result_title").innerHTML = "Your browser does not support a necessary function of modern JavaScript.<br>Please ensure it is enabled or try using a different browser.";
                     return false;
                 }
@@ -75,6 +76,7 @@
                     url: `/api/get?!limit=1${searchQuery}`,
                     success: function (result) {
                         if (Object.keys(result).length == 0) {
+                            document.getElementById('div_result_details').hidden = true;
                             document.getElementById("result_title").innerHTML = "No results found.";
                             return false;
                         }
@@ -160,6 +162,7 @@
                     },
                     error: function (result) {
                         console.log("Error getting data: ", result);
+                        document.getElementById('div_result_details').hidden = true;
                         document.getElementById("result_title").innerHTML = "ERROR";
                         return false;
                     }
