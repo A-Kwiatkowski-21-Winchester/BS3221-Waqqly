@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+
+<head>
+    <meta charset="utf-8">
+    <title>Waqqly Site | Search</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/css/main.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+</head>
+
+<body>
+    <h1>Search</h1>
+
+    <form id="form_search">
+        <label>I am looking for a...</label><br>
+        <input type="radio" required id="search_owner" name="type" value="Owner">
+        <label for="search_owner">Dog Owner</label> &emsp;
+        <input type="radio" required id="search_walker" name="type" value="Walker">
+        <label for="search_walker">Dog Walker</label>
+        <br><br>
+        <label for="search_fname">First Name:</label><br>
+        <input type="text" id="search_fname" name="first_name" value=""><br>
+        <label for="search_lname">Last Name:</label><br>
+        <input type="text" id="search_lname" name="last_name" value=""><br>
+        <br>
+        <label for="search_addr_city">City:</label><br>
+        <input type="text" id="search_addr_city" name="addr_city" value=""><br>
+        <label for="search_addr_country">Country:</label><br>
+        <input type="text" id="search_addr_country" name="addr_country" value=""><br>
+        <br>
+        <p><small>Searches are currently <b>case sensitive</b>.</small></p>
+        <input class="button primary" type="submit" value="Search"></input>
+        <a href="/" class="button secondary">Cancel</a>
+    </form>
+    <br><br>
+
+    <script>
+        $(function () {
+            $('#form_search').on("submit", function (e) {
+                e.preventDefault(); // cancel the actual submit
+
+                /* do what you want with the form */
+                document.getElementById('div_result').hidden = false;
+                document.getElementById('result_title').innerText = "Loading...";
+                console.log("Searching...")
+                let searchData = {
+                    type: document.querySelector('input[name=type]:checked').value,
+                    first_name: document.querySelector('input[name=first_name]').value,
+                    last_name: document.querySelector('input[name=last_name]').value,
+                    addr_city: document.querySelector('input[name=addr_city]').value,
+                    addr_country: document.querySelector('input[name=addr_country]').value,
+                }
+                let searchQuery = ""
+
+                try {
+                    for (const [key, value] of Object.entries(searchData)) {
+                        if (!value) {
+                            continue;
+                        }
+                        searchQuery += `&${key}=${encodeURI(value)}`
+                    }
+                } catch (error) {
+                    console.error(error);
+                    document.getElementById("result_title").innerHTML = "Your browser does not support a necessary function of modern JavaScript.<br>Please ensure it is enabled or try using a different browser.";
+                    return false;
+                }
+
+                console.log("Query: " + searchQuery)
+
+                $.ajax({
+                    type: "GET",
+                    headers: { Authorization: "basic YXBpZGVtbzp0ZXN0", Accept: "application/json" },
+                    url: `/api/get?!limit=1${searchQuery}`,
+                    success: function (result) {
+                        if (Object.keys(result).length == 0) {
+                            document.getElementById("result_title").innerHTML = "No results found.";
+                            return false;
+                        }
+                        firstSelection = result[0];
+                        console.log("Captured: ", firstSelection);
+                        document.getElementById("result_title").innerHTML = "Closest Match:";
+                        document.getElementById("result_full_name").innerHTML = `${firstSelection.first_name} ${firstSelection.last_name}`;
+                        document.getElementById("result_email").innerHTML = firstSelection.email;
+                        document.getElementById("result_phone").innerHTML = firstSelection.phone;
+                        document.getElementById("result_addr_line1").innerHTML = firstSelection.addr_line1;
+                        document.getElementById("result_addr_city").innerHTML = firstSelection.addr_city;
+                        document.getElementById("result_addr_country").innerHTML = firstSelection.addr_country;
+                        document.getElementById("result_addr_postal").innerHTML = firstSelection.addr_postal;
+
+                        function mapFail(mapResult) {
+                            console.log("Failed to receive place data for address")
+                            console.log(mapResult)
+                            document.getElementById("result_map").innerHTML = "❌ Unable to load map.";
+                        }
+
+                        let addr_coords = {};
+                        if ('addr_coords' in firstSelection) {
+                            addr_coords = firstSelection.addr_coords;
+                        } else {
+                            let addrQuery = encodeURI(
+                                firstSelection.addr_line1 + ", " +
+                                firstSelection.addr_city + ", " +
+                                firstSelection.addr_country + ", " +
+                                firstSelection.addr_postal
+                            );
+
+                            console.log(`Address query: ${addrQuery}`)
+
+                            function mapRequest() {
+                                return $.ajax({
+                                    type: "GET",
+                                    url: `https://nominatim.openstreetmap.org/search?q=${addrQuery}&format=json`,
+                                    success: function (mapResult) {
+                                        if (Object.keys(mapResult).length == 0) {
+                                            mapFail(mapResult);
+                                            return false;
+                                        }
+                                        console.log("Retrieved place data for address");
+                                        console.log(mapResult);
+                                        try {
+                                            addr_coords = { lat: mapResult[0].lat, lon: mapResult[0].lon };
+                                        } catch (error) {
+                                            mapFail(mapResult);
+                                            return false;
+                                        }
+                                    },
+                                    error: function (mapResult) {
+                                        mapFail(mapResult);
+                                    }
+                                });
+                            }
+                        }
+
+                        document.getElementById('div_result_details').hidden = false;
+
+                        $.when(mapRequest()).done(function() {
+                            // Map must be created after reveal so bounding box loads in correctly
+                            if (Object.keys(addr_coords).length == 0) {
+                                mapFail("(Address coordinate data empty)")
+                            } else {
+                                let mapSize = (300, 250);
+                                let bboxSize = 0.03
+                                console.log(addr_coords)
+                                console.log("Parsing coordinates")
+                                let mapLocLat = Number.parseFloat(addr_coords.lat);
+                                let mapLocLon = Number.parseFloat(addr_coords.lon);
+                                console.log(`Coordinates found: ${mapLocLat},${mapLocLon}`)
+                                let mapConstruct = `
+                                <iframe width="${mapSize[0]}" height="${mapSize[1]}"
+                                src="https://www.openstreetmap.org/export/embed.html?bbox=${mapLocLon - bboxSize}%2C${mapLocLat + bboxSize}%2C${mapLocLon + bboxSize}%2C${mapLocLat - bboxSize}&amp;layer=mapnik&amp;marker=${mapLocLat}%2C${mapLocLon}"
+                                style="border: 2px solid darkred; border-radius:2%"></iframe>
+                                <br /><small><a href="https://www.openstreetmap.org/?mlat=${mapLocLat}&amp;mlon=${mapLocLon}" target="_blank">View Larger Map</a></small></div>
+                                `;
+                                document.getElementById("result_map").innerHTML = mapConstruct;
+                            }
+                        });
+
+                    },
+                    error: function (result) {
+                        console.log("Error getting data: ", result);
+                        document.getElementById("result_title").innerHTML = "ERROR";
+                        return false;
+                    }
+                });
+            });
+        });
+    </script>
+
+    <div id="div_result" hidden>
+        <h2>Results</h2>
+        <h3 id="result_title">{result_title}</h3>
+        <div id="div_result_details" hidden>
+            <strong id="result_full_name">{result.full_name}</strong>
+            <p>
+                <span id="result_email">{result.email}</span><br>
+                <span id="result_phone">{result.phone}</span><br>
+            </p>
+            <p>
+                <span id="result_addr_line1">{result.addr_line1}</span><br>
+                <span id="result_addr_city">{result.addr_city}</span><br>
+                <span id="result_addr_country">{result.addr_country}</span><br>
+                <span id="result_addr_postal">{result.addr_postal}</span><br>
+            </p>
+            <div id="result_map"> <iframe width="300" height="250"
+                    src="https://www.openstreetmap.org/export/embed.html?bbox=-95.3976974%2C29.7889382%2C-95.3376974%2C29.7389382&amp;layer=mapnik&amp;marker=29.7589382%2C-95.3676974"
+                    style="border: 2px solid darkred; border-radius:2%"></iframe><br /><small><a
+                        href="https://www.openstreetmap.org/?mlat=51.7596&amp;mlon=-1.2536#map=14/51.7596/-1.2536">View
+                        Larger Map</a></small></div>
+        </div>
+
+    </div>
+    <br><br><br>
+    <div class="banner">
+        <footer>
+            '<img src="/static/media/icon.png" alt="W icon" height="12px">'
+            Icon provided by riajulislam from
+            <a href="https://www.flaticon.com/free-icon/letter-w_9511543" title="Icon Page">Flaticon</a>.
+        </footer>
+    </div>
+</body>
+
+</html>

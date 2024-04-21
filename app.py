@@ -6,10 +6,7 @@ import configparser
 from pprint import pprint
 import random
 import secrets
-import urllib
-import urllib.parse
-import requests
-
+from pymongo.collation import Collation, CollationStrength
 import bson
 import bson.json_util
 from flask import (
@@ -72,10 +69,11 @@ printlog(db.list_collection_names())
 un_pw_pair = "apidemo:test"  # b64: YXBpZGVtbzp0ZXN0
 correct_b64_auth = base64.b64encode(un_pw_pair.encode("utf-8"))
 
-db.testcollection.delete_many({"first_name": {"$regex": "TEST.*"}})
+# db.testcollection.delete_many({"first_name": {"$regex": "TEST.*"}})
 
 
 def checkAuthorization(abortOnFail: bool = True):
+    printlog("Checking headers...")
     printlog(list(request.headers), pretty=True)
     auth_header = request.headers.get("Authorization")
     # If no authorization header in request, or is not of type "basic", abort with 400.
@@ -114,6 +112,9 @@ def favicon():
 
 @app.route("/api/get", methods=["GET"])
 def getAPI():
+    implicit_limit = 5
+    max_limit = 50
+    printlog("GET REQUEST RECEIVED")
     checkAuthorization()
     accept_headers = request.headers.getlist("Accept")
 
@@ -122,15 +123,25 @@ def getAPI():
 
     return_string = "<h1>API PAGE REACHED</h1> <p>Welcome user!</p> "
     testcollection = db.get_collection("testcollection")
+
     filter = request.args.to_dict()
+    printlog("GET Filter:")
+    printlog(filter, pretty=True)
+
+    limit = int(filter.pop("!limit", False)) or implicit_limit
+    limit = max_limit if limit > max_limit else limit
     itemcount = testcollection.count_documents(filter)
-    testitems = testcollection.find(filter)  # TODO: Add special query params like LIMIT
-    bsonitems = bson.json_util.dumps(testitems, indent=2)
-    jsonitems = json.dumps(json.loads(bsonitems), skipkeys=True)
+    printlog(f"Found {itemcount} items matching filter. Limiting to {limit}.")
+    testitems = testcollection.find(filter).limit(limit)
+    items_bson = bson.json_util.dumps(testitems, indent=2)
+    # Re-loading it to ensure it conforms to JSON
+    items_json = json.dumps(json.loads(items_bson), skipkeys=True)
     return_string += f"Items with filter '{filter}': {itemcount}"
 
-    if ("acceptJSON" in g) and (g.acceptJSON is True):
-        return jsonify(json.loads(jsonitems))
+    if g.get("acceptJSON") is True:
+        printlog("Returning JSON data")
+        printlog(items_json, pretty=True)
+        return jsonify(json.loads(items_json))
 
     return return_string
 
@@ -213,9 +224,9 @@ def register_complete():
 
 @app.route("/")
 def index():
-    printlog("\nNew Request:")
+    printlog("New Request:")
     testcollection = db.get_collection("testcollection")
-    filter = {"type": {"$regex": "walk.*"}}
+    filter = {}
     itemcount = testcollection.count_documents(filter)
     printlog(
         f"Number of items in '{testcollection.name}' using filter {filter}: {itemcount}"
@@ -223,7 +234,10 @@ def index():
 
     # Method 1 for getting random item:
     testitems = testcollection.find(filter)
-    randitem = testitems[random.randint(0, itemcount - 1)]
+    try:
+        randitem = testitems[random.randint(0, itemcount - 1)]
+    except ValueError:
+        randitem = {"first_name": "error", "last_name": "error", "type": "error"}
     printlog()
     printlog("Selected random item (m1):")
     printlog(randitem, pretty=True)
